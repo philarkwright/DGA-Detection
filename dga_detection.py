@@ -20,9 +20,6 @@ def train_data():
 	process_data(bigram_list, total_bigrams) #Call process_data
 
 
- 
-
-
 def process_data(bigram_list, total_bigrams):
 
 	data = open('dgapro.txt').read().splitlines()
@@ -37,10 +34,31 @@ def process_data(bigram_list, total_bigrams):
 		percentage_list.append(scipy.mean(percentage)) #Add percentage value to list for total average
 		print data[word], percentage, "AP:", scipy.mean(percentage) #Print word and percentage list
 		percentage = [] #Clear percentage list
+	print 67 * "*"
 	print "Total Average Percentage:", scipy.mean(percentage_list) #Get average percentage
+	print 67 * "*"
+
+ans=True
+while ans:
+	print 30 * "-" , "MENU" , 30 * "-"
+	print ("""
+	1. Train Data
+	2. Starting Capturing DNS
+	3. Exit/Quit
+	""")
+	print 67 * "-"
+	ans=raw_input("Select an option to proceed: ") 
+	if ans=="1": 
+		train_data()
+	elif ans=="2":
+	  print("\n Student Deleted") 
+	elif ans=="3":
+	  print("\nExiting...") 
+	  quit()
+	elif ans !="":
+	  print("\n Not Valid Choice Try again") 
 
 
-train_data()
 
 
 
