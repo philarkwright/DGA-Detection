@@ -39,22 +39,41 @@ else:
 
 def train_data():
 
-	training_data = open('alexa_top_10k_domain.txt').read().splitlines() #Import alexa top domains 
-	bigram_list = {} #Define bigram_list
-	total_bigrams = 0 #Set initial total to 0
-	for word in xrange(len(training_data)): #Run through each word in the training list
-		print "Processing domain:", word #Print word number in list
-		for  bigram_position in xrange(len(training_data[word]) - 1): #Run through each bigram in word
-			total_bigrams = total_bigrams + 1 #Increment bigram total
-			if training_data[word][bigram_position:bigram_position + 2] in bigram_list: #Check if bigram already exists in dictionary
-				bigram_list[training_data[word][bigram_position:bigram_position + 2]] = bigram_list[training_data[word][bigram_position:bigram_position + 2]] + 1 #Increment dictionary value by 1
-			else:
-				bigram_list[training_data[word][bigram_position:bigram_position + 2]] = 1 #Add bigram to list and set value to 1
+    if os.path.isfile('database.json'):
 
-	pprint(bigram_list) #Print bigram list
-	with open('database.json', 'w') as f:
-		json.dump(bigram_list, f)
-	process_data(bigram_list, total_bigrams) #Call process_data
+	with open('database.json', 'r') as f:
+	    try:
+	        bigram_list = json.load(f)
+	        process_data(bigram_list, total_bigrams_settings) #Call process_data
+	    # if the file is empty the ValueError will be thrown
+	    except ValueError:
+	        bigram_list = {}
+
+    else:
+
+		training_data = open('alexa_top_10k_domain.txt').read().splitlines() #Import alexa top domains 
+		bigram_list = {} #Define bigram_list
+		total_bigrams = 0 #Set initial total to 0
+		for word in xrange(len(training_data)): #Run through each word in the training list
+			print "Processing domain:", word #Print word number in list
+			for  bigram_position in xrange(len(training_data[word]) - 1): #Run through each bigram in word
+				total_bigrams = total_bigrams + 1 #Increment bigram total
+				if training_data[word][bigram_position:bigram_position + 2] in bigram_list: #Check if bigram already exists in dictionary
+					bigram_list[training_data[word][bigram_position:bigram_position + 2]] = bigram_list[training_data[word][bigram_position:bigram_position + 2]] + 1 #Increment dictionary value by 1
+				else:
+					bigram_list[training_data[word][bigram_position:bigram_position + 2]] = 1 #Add bigram to list and set value to 1
+
+		pprint(bigram_list) #Print bigram list
+		with open('database.json', 'w') as f:
+			json.dump(bigram_list, f)
+
+		process_data(bigram_list, total_bigrams) #Call process_data
+
+def checkList(percentage, total_average_percentage):
+    for i in range(len(percentage) - 1):
+        if percentage[i] < total_average_percentage and percentage[i+1] < total_average_percentage and percentage[i+1] < total_average_percentage:
+            return True
+    return False
 
 
 def process_data(bigram_list, total_bigrams):
@@ -79,7 +98,6 @@ def process_data(bigram_list, total_bigrams):
 	good_bigrams = 0 #Define good_bigrams. Good_bigram is any bigram within the word that has a higher percentage than the average DGA bigram.
 	good_bigrams_percentage_list = []
 
-
 	for word in xrange(len(data)): #Run through each word in the data
 		for  bigram_position in xrange(len(data[word]) - 1): #Run through each bigram in the data
 			if data[word][bigram_position:bigram_position + 2] in bigram_list: #Check if bigram is in dictionary 
@@ -91,6 +109,8 @@ def process_data(bigram_list, total_bigrams):
 
 		good_bigrams_percentage = ((good_bigrams / len(percentage)) * 100)
 		good_bigrams_percentage_list.append(good_bigrams_percentage)
+
+
 		print data[word], "AP:", scipy.mean(percentage), "GBP:", good_bigrams_percentage #Print word and percentage list
 		percentage = [] #Clear percentage list
 		good_bigrams = 0
@@ -104,23 +124,14 @@ def process_data(bigram_list, total_bigrams):
 	cfgfile = open("settings.conf",'w')
 	Config.set('Percentages','total_average_percentage', scipy.mean(percentage_list))
 	Config.set('Percentages','total_average_good_bigram_percentage', scipy.mean(good_bigrams_percentage_list))
-	Config.set('Values','total_bigrams_settings', total_bigrams)
 	Config.write(cfgfile)
 	cfgfile.close()
-
-def check_domain(domain):
-
-	if os.path.isfile('database.json'):
-		with open('database.json', 'r') as f:
-		    try:
-		        bigram_list = json.load(f)
-		    # if the file is empty the ValueError will be thrown
-		    except ValueError:
-		        bigram_list = {}
 
 
 	good_bigrams = 0
 	percentage = [] #Define percentage
+
+def check_domain(domain):
 
 	for  bigram_position in xrange(len(domain) - 1): #Run through each bigram in the data
 		if domain[bigram_position:bigram_position + 2] in bigram_list: #Check if bigram is in dictionary 
@@ -160,8 +171,6 @@ def testing():
 
 	data = open('dgapro.txt').read().splitlines()
 
-
-
 	if os.path.isfile('database.json'):
 		with open('database.json', 'r') as f:
 		    try:
@@ -184,22 +193,25 @@ def testing():
 			else:
 				percentage.append(0) #Bigram value is 0 as it doesn't exist
 		good_bigrams_percentage = ((good_bigrams / len(percentage)) * 100)
-		print data[word], "AP:", scipy.mean(percentage), "GBP:", good_bigrams_percentage #Print word and percentage list
+
 		total_flags = total_flags + 1
 
 		if total_average_percentage >= scipy.mean(percentage):
 			flag = flag + 1
+			print data[word], "AP:", scipy.mean(percentage), "GBP:", good_bigrams_percentage, 1 #Print word and percentage list
 		elif total_average_good_bigram_percentage >= good_bigrams_percentage:
 			flag = flag + 1
+			print data[word], "AP:", scipy.mean(percentage), "GBP:", good_bigrams_percentage, 1 #Print word and percentage list
+		else:
+			print data[word], "AP:", scipy.mean(percentage), "GBP:", good_bigrams_percentage, 0 #Print word and percentage list
 
 
 		percentage = [] #Clear percentage list
 		good_bigrams = 0
 
+	print 67 * "*"
 	print "Detection Rate:", flag / total_flags * 100
-
-
-
+	print 67 * "*"
 
 ans=True
 while ans:
@@ -239,6 +251,7 @@ while ans:
 #Add to a raspberry device, MITM and then use pushnotification to notify of network activity
 #Look at length of word 
 #0's being added randomly
+#Criminals can bypass by using high frequency bigrams
 
 
 
