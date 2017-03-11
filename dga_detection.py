@@ -116,11 +116,10 @@ def check_domain(domain):
 		        bigram_list = json.load(f)
 		    # if the file is empty the ValueError will be thrown
 		    except ValueError:
-		        data = {}
+		        bigram_list = {}
 
 
 	good_bigrams = 0
-	data = open('dgapro.txt').read().splitlines()
 	percentage = [] #Define percentage
 
 	for  bigram_position in xrange(len(domain) - 1): #Run through each bigram in the data
@@ -131,23 +130,76 @@ def check_domain(domain):
 		else:
 			percentage.append(0) #Bigram value is 0 as it doesn't exist
 	good_bigrams_percentage = ((good_bigrams / len(percentage)) * 100)
-	print domain, "AP:", scipy.mean(percentage), "GBP:", good_bigrams_percentage #Print word and percentage list
-	percentage = [] #Clear percentage list
-	good_bigrams = 0
-	if total_average_percentage >= scipy.mean(percentage) or total_average_good_bigram_percentage >= good_bigrams_percentage:
+	print domain, percentage, "AP:", scipy.mean(percentage), "GBP:", good_bigrams_percentage #Print word and percentage list
+
+	if total_average_percentage >= scipy.mean(percentage):
+		return 1
+	elif total_average_good_bigram_percentage >= good_bigrams_percentage:
 		return 1
 	else:
 		return 0
 
+	percentage = [] #Clear percentage list
+	good_bigrams = 0
+
 def capture_traffic(pkt):
 	if IP in pkt:
-	        ip_src = pkt[IP].src
-	        ip_dst = pkt[IP].dst
-	        if pkt.haslayer(DNS) and pkt.getlayer(DNS).qr == 0:
-	            if check_domain(pkt.getlayer(DNS).qd.qname) == 1:
-	              print "Warning! Potential DGA Detected ", "(" + pkt.getlayer(DNS).qd.qname + ")"
-	            else:
-	              print "Safe domain", "(" + pkt.getlayer(DNS).qd.qname + ")"
+		ip_src = pkt[IP].src
+		ip_dst = pkt[IP].dst
+		if pkt.haslayer(DNS) and pkt.getlayer(DNS).qr == 0:
+			#sep = '.'
+			#domain = (pkt.getlayer(DNS).qd.qname).split(sep, 1)[0]
+			domain = (pkt.getlayer(DNS).qd.qname)
+			if "localdomain" not in domain and len(domain) > 4:
+				if check_domain(domain) == 1:
+					print "Warning! Potential DGA Detected ", "(" + domain + ")"
+				else:
+					print "Safe domain", "(" + domain + ")"
+
+def testing():
+
+	data = open('dgapro.txt').read().splitlines()
+
+
+
+	if os.path.isfile('database.json'):
+		with open('database.json', 'r') as f:
+		    try:
+		        bigram_list = json.load(f)
+		    # if the file is empty the ValueError will be thrown
+		    except ValueError:
+		        bigram_list = {}
+	flag = 0
+	total_flags = 0
+	good_bigrams = 0
+	percentage = [] #Define percentage
+
+	for word in xrange(len(data)): #Run through each word in the data
+
+		for  bigram_position in xrange(len(data[word]) - 1): #Run through each bigram in the data
+			if data[word][bigram_position:bigram_position + 2] in bigram_list: #Check if bigram is in dictionary 
+				percentage.append((bigram_list[data[word][bigram_position:bigram_position + 2]] / total_bigrams_settings) * 100) #Get bigram dictionary value and convert to percantage
+				if ((bigram_list[data[word][bigram_position:bigram_position + 2]] / total_bigrams_settings) * 100) > total_average_percentage: #Check if bigram percentage is greater than the average DGA bigram percentage
+					good_bigrams = good_bigrams + 1 #Increment good_bigram
+			else:
+				percentage.append(0) #Bigram value is 0 as it doesn't exist
+		good_bigrams_percentage = ((good_bigrams / len(percentage)) * 100)
+		print data[word], "AP:", scipy.mean(percentage), "GBP:", good_bigrams_percentage #Print word and percentage list
+		total_flags = total_flags + 1
+
+		if total_average_percentage >= scipy.mean(percentage):
+			flag = flag + 1
+		elif total_average_good_bigram_percentage >= good_bigrams_percentage:
+			flag = flag + 1
+
+
+		percentage = [] #Clear percentage list
+		good_bigrams = 0
+
+	print "Detection Rate:", flag / total_flags * 100
+
+
+
 
 ans=True
 while ans:
@@ -155,9 +207,10 @@ while ans:
 	print ("""
 	1. Train Data
 	2. Start Capturing DNS
-	3. View Config File
-	4. Reset Config File
-	5. Exit/Quit
+	3. Testing
+	4. View Config File
+	5. Reset Config File
+	6. Exit/Quit
 	""")
 	print 67 * "-"
 	ans=raw_input("Select an option to proceed: ") 
@@ -172,18 +225,20 @@ while ans:
 			sys.exit(1)
 		sniff(iface = interface,filter = "port 53", prn = capture_traffic, store = 0)
 	elif ans=="3":
-	  print("\n Student Deleted")
+	  testing()
 	elif ans=="4":
-	  print("\n Student Deleted")
+	  print("\n 4")
 	elif ans=="5":
+	  print("\n 5")
+	elif ans=="6":
 	  print("\nExiting...") 
 	  quit()
 	elif ans !="":
 	  print("\n Not Valid Choice Try again") 
 
 #Add to a raspberry device, MITM and then use pushnotification to notify of network activity
-
-
+#Look at length of word 
+#0's being added randomly
 
 
 
