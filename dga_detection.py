@@ -28,43 +28,48 @@ Config = ConfigParser.ConfigParser()
 
 if os.path.isfile('settings.conf'):
 	Config.read("settings.conf")
-	total_average_percentage = float(ConfigSectionMap("Percentages")['total_average_percentage'])
-	total_average_good_bigram_percentage = float(ConfigSectionMap("Percentages")['total_average_good_bigram_percentage'])
+	percentage_list_dga_settings = float(ConfigSectionMap("Percentages")['percentage_list_dga_settings'])
+	percentage_list_alexa_settings = float(ConfigSectionMap("Percentages")['percentage_list_alexa_settings'])
+	total_average_percentage = float(ConfigSectionMap("Percentages")['baseline'])
 	total_bigrams_settings = float(ConfigSectionMap("Values")['total_bigrams_settings'])
-else:
-	cfgfile = open("settings.conf",'w')
-	Config.add_section('Percentages')
-	Config.add_section('Values')
-	Config.set('Percentages','total_average_percentage', 0)
-	Config.write(cfgfile)
-	cfgfile.close()
 
 
 def load_data():
 
-    if os.path.isfile('database.json'):
+	if os.path.isfile('database.json') and os.path.isfile('settings.conf'):
 
-	with open('database.json', 'r') as f:
-	    try:
-	        bigram_dict = json.load(f)
-	        process_data(bigram_dict, total_bigrams_settings) #Call process_data
-	    # if the file is empty the ValueError will be thrown
-	    except ValueError:
-	        bigram_dict = {}
+		with open('database.json', 'r') as f:
+		    try:
+		        bigram_dict = json.load(f)
+		        process_data(bigram_dict, total_bigrams_settings) #Call process_data
+		    # if the file is empty the ValueError will be thrown
+		    except ValueError:
+		        bigram_dict = {}
+	else:
 
-    else:
+		try:
+			cfgfile = open("settings.conf",'w')
+			Config.add_section('Percentages')
+			Config.add_section('Values')
+			Config.set('Percentages','total_average_percentage', 0)
+			Config.write(cfgfile)
+			cfgfile.close()
+		except:
+			print "Settings file error. Please Delete."
+			exit()
 
-		training_data = open('alexa_top_10k_domain.txt').read().splitlines() #Import alexa top domains 
+		training_data = open('alexa_top_10m_domain.txt').read().splitlines() #Import alexa top domains 
 		bigram_dict = {} #Define bigram_dict
 		total_bigrams = 0 #Set initial total to 0
 		for word in xrange(len(training_data)): #Run through each word in the training list
-			print "Processing domain:", word #Print word number in list
-			for  bigram_position in xrange(len(training_data[word]) - 1): #Run through each bigram in word
-				total_bigrams = total_bigrams + 1 #Increment bigram total
-				if training_data[word][bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram already exists in dictionary
-					bigram_dict[training_data[word][bigram_position:bigram_position + 2]] = bigram_dict[training_data[word][bigram_position:bigram_position + 2]] + 1 #Increment dictionary value by 1
-				else:
-					bigram_dict[training_data[word][bigram_position:bigram_position + 2]] = 1 #Add bigram to list and set value to 1
+			if len(training_data[word]) > 5 and "-" not in training_data[word]:
+				print "Processing domain:", word #Print word number in list
+				for  bigram_position in xrange(len(training_data[word]) - 1): #Run through each bigram in word
+					total_bigrams = total_bigrams + 1 #Increment bigram total
+					if training_data[word][bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram already exists in dictionary
+						bigram_dict[training_data[word][bigram_position:bigram_position + 2]] = bigram_dict[training_data[word][bigram_position:bigram_position + 2]] + 1 #Increment dictionary value by 1
+					else:
+						bigram_dict[training_data[word][bigram_position:bigram_position + 2]] = 1 #Add bigram to list and set value to 1
 
 		pprint(bigram_dict) #Print bigram list
 		with open('database.json', 'w') as f:
@@ -74,57 +79,51 @@ def load_data():
 
 def process_data(bigram_dict, total_bigrams):
 
-	data = open('dgapro.txt').read().splitlines()
-	percentage = [] #Define percentage
-	percentage_list = [] #Define average_percentage
+	data = open('alexa_training.txt').read().splitlines()
+	percentage_list_alexa = [] #Define average_percentage
 
 	for word in xrange(len(data)): #Run through each word in the data
-		for  bigram_position in xrange(len(data[word]) - 1): #Run through each bigram in the data
-			if data[word][bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary 
-				percentage.append((bigram_dict[data[word][bigram_position:bigram_position + 2]] / total_bigrams) * 100) #Get bigram dictionary value and convert to percantage
-			else:
-				percentage.append(0) #Bigram value is 0 as it doesn't exist
+		if len(data[word]) > 5 and "-" not in data[word]:
+			percentage = [] #Clear percentage list
+			for  bigram_position in xrange(len(data[word]) - 1): #Run through each bigram in the data
+				if data[word][bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary 
+					percentage.append((bigram_dict[data[word][bigram_position:bigram_position + 2]] / total_bigrams) * 100) #Get bigram dictionary value and convert to percantage
+				else:
+					percentage.append(0) #Bigram value is 0 as it doesn't exist
 
-		percentage_list.append(scipy.mean(percentage)) #Add percentage value to list for total average
-		print data[word], "AP:", scipy.mean(percentage) #Print word and percentage list
-		percentage = [] #Clear percentage list
-	
-	total_average_percentage = scipy.mean(percentage_list)
+			percentage_list_alexa.append(scipy.mean(percentage)) #Add percentage value to list for total average
+			print data[word], "AP:", scipy.mean(percentage) #Print word and percentage list
 
-	high_frequency_bigrams = 0 #Define high_frequency_bigrams. Good_bigram is any bigram within the word that has a higher percentage than the average DGA bigram.
-	good_bigrams_percentage_list = []
+
+	data = open('dga_training.txt').read().splitlines()
+	percentage_list_dga = [] #Define average_percentage
 
 	for word in xrange(len(data)): #Run through each word in the data
-		for  bigram_position in xrange(len(data[word]) - 1): #Run through each bigram in the data
-			if data[word][bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary 
-				percentage.append((bigram_dict[data[word][bigram_position:bigram_position + 2]] / total_bigrams) * 100) #Get bigram dictionary value and convert to percantage
-				if ((bigram_dict[data[word][bigram_position:bigram_position + 2]] / total_bigrams) * 100) > total_average_percentage: #Check if bigram percentage is greater than the average DGA bigram percentage
-					high_frequency_bigrams = high_frequency_bigrams + 1 #Increment good_bigram
-			else:
-				percentage.append(0) #Bigram value is 0 as it doesn't exist
+		if len(data[word]) > 5 and "-" not in data[word]:
+			percentage = [] #Clear percentage list
+			for  bigram_position in xrange(len(data[word]) - 1): #Run through each bigram in the data
+				if data[word][bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary 
+					percentage.append((bigram_dict[data[word][bigram_position:bigram_position + 2]] / total_bigrams) * 100) #Get bigram dictionary value and convert to percantage
+				else:
+					percentage.append(0) #Bigram value is 0 as it doesn't exist
 
-		high_frequency_bigrams_percentage = ((high_frequency_bigrams / len(percentage)) * 100)
-		good_bigrams_percentage_list.append(high_frequency_bigrams_percentage)
-
-
-		print data[word], "AP:", scipy.mean(percentage), "HBP:", high_frequency_bigrams_percentage #Print word and percentage list
-		percentage = [] #Clear percentage list
-		high_frequency_bigrams = 0
+			percentage_list_dga.append(scipy.mean(percentage)) #Add percentage value to list for total average
+			print data[word], "AP:", scipy.mean(percentage) #Print word and percentage list
 
 	print 67 * "*"
-	print "Total Average Percentage:", scipy.mean(percentage_list), "( Min:", min(percentage_list), "Max:", max(percentage_list), ")" #Get average percentage
-	print "Total Average High Frequency Bigram Percentage:", scipy.mean(good_bigrams_percentage_list), "( Min:", min(good_bigrams_percentage_list), "Max:", max(good_bigrams_percentage_list), " )"
+	print "Total Average Percentage Alexa:", scipy.mean(percentage_list_alexa), "( Min:", min(percentage_list_alexa), "Max:", max(percentage_list_alexa), ")" #Get average percentage
+	print "Total Average Percentage DGA:", scipy.mean(percentage_list_dga), "( Min:", min(percentage_list_dga), "Max:", max(percentage_list_dga), ")" #Get average percentage
+	print "TAPA - TAPD:", (((scipy.mean(percentage_list_alexa) - scipy.mean(percentage_list_dga)) / 2) + scipy.mean(percentage_list_dga))
 	print 67 * "*"
 
 	cfgfile = open("settings.conf",'w')
-	Config.set('Percentages','total_average_percentage', scipy.mean(percentage_list))
-	Config.set('Percentages','total_average_good_bigram_percentage', scipy.mean(good_bigrams_percentage_list))
+	Config.set('Percentages','percentage_list_alexa_settings', scipy.mean(percentage_list_alexa))
+	Config.set('Percentages','percentage_list_dga_settings', scipy.mean(percentage_list_dga))
+	Config.set('Percentages','baseline', (((scipy.mean(percentage_list_alexa) - scipy.mean(percentage_list_dga)) / 2) + scipy.mean(percentage_list_dga)))
 	Config.set('Values','total_bigrams_settings', total_bigrams)
 	Config.write(cfgfile)
 	cfgfile.close()
 
-
-	high_frequency_bigrams = 0
 	percentage = [] #Define percentage
 
 def check_domain(input_domain):
@@ -138,27 +137,20 @@ def check_domain(input_domain):
 		        bigram_dict = {}
 	
 	percentage = []
-	high_frequency_bigrams = 0
 
 	for  bigram_position in xrange(len(input_domain) - 1): #Run through each bigram in the data
 		if input_domain[bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary 
 			percentage.append((bigram_dict[input_domain[bigram_position:bigram_position + 2]] / total_bigrams_settings) * 100) #Get bigram dictionary value and convert to percantage
-			if ((bigram_dict[input_domain[bigram_position:bigram_position + 2]] / total_bigrams_settings) * 100) > total_average_percentage: #Check if bigram percentage is greater than the average DGA bigram percentage
-				high_frequency_bigrams = high_frequency_bigrams + 1 #Increment good_bigram
 		else:
 			percentage.append(0) #Bigram value is 0 as it doesn't exist
-	high_frequency_bigrams_percentage = ((high_frequency_bigrams / len(percentage)) * 100)
-	#print input_domain, percentage, "AP:", scipy.mean(percentage), "HBP:", high_frequency_bigrams_percentage #Print word and percentage list
 
 	if total_average_percentage >= scipy.mean(percentage):
-		return 1
-	elif total_average_good_bigram_percentage >= high_frequency_bigrams_percentage:
+		print total_average_percentage, scipy.mean(percentage)
 		return 1
 	else:
 		return 0
 
 	percentage = [] #Clear percentage list
-	high_frequency_bigrams = 0
 
 def capture_traffic(pkt):
 	if IP in pkt:
@@ -166,17 +158,16 @@ def capture_traffic(pkt):
 		ip_dst = pkt[IP].dst
 		if pkt.haslayer(DNS) and pkt.getlayer(DNS).qr == 0:
 			input_domain = tldextract.extract(pkt.getlayer(DNS).qd.qname)
-			input_domain = "{}".format(input_domain.domain)
-			#input_domain = (pkt.getlayer(DNS).qd.qname).split('.')
-			if "localdomain" not in (pkt.getlayer(DNS).qd.qname) and len(input_domain) > 5 and "-" not in input_domain: #Domains are no smaller than 6
-				if check_domain(input_domain) == 1:
+			if input_domain.suffix != '' and input_domain.suffix != 'localdomain' and input_domain.subdomain == '' and len(input_domain.domain) > 5 and "-" not in input_domain: #Domains are no smaller than 6
+				if check_domain(input_domain.domain) == 1:
+					print input_domain.domain
 					print str(ip_src) +  "->",  str(ip_dst), "Warning! Potential DGA Detected ", "(", (pkt.getlayer(DNS).qd.qname), ")"
 				#else:
 					#print "Safe input_domain", "(" + input_domain + ")"
 
 def testing():
 
-	data = open('dgapro.txt').read().splitlines()
+	data = open('test_domains.txt').read().splitlines()
 
 	if os.path.isfile('database.json'):
 		with open('database.json', 'r') as f:
@@ -187,38 +178,27 @@ def testing():
 		        bigram_dict = {}
 	flag = 0
 	total_flags = 0
-	high_frequency_bigrams = 0
 	percentage = [] #Define percentage
 
 	for word in xrange(len(data)): #Run through each word in the data
+		if len(data[word]) > 5 and "-" not in data[word]:
+			for  bigram_position in xrange(len(data[word]) - 1): #Run through each bigram in the data
+				if data[word][bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary
+					percentage.append((round(((bigram_dict[data[word][bigram_position:bigram_position + 2]] / total_bigrams_settings) * 100), 2))) #Get bigram dictionary value and convert to percantage
+				else:
+					percentage.append(0) #Bigram value is 0 as it doesn't exist
+			
 
-		for  bigram_position in xrange(len(data[word]) - 1): #Run through each bigram in the data
-			if data[word][bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary 
-				percentage.append((bigram_dict[data[word][bigram_position:bigram_position + 2]] / total_bigrams_settings) * 100) #Get bigram dictionary value and convert to percantage
-				if ((bigram_dict[data[word][bigram_position:bigram_position + 2]] / total_bigrams_settings) * 100) > total_average_percentage: #Check if bigram percentage is greater than the average DGA bigram percentage
-					high_frequency_bigrams = high_frequency_bigrams + 1 #Increment good_bigram
+			total_flags = total_flags + 1
+
+			if total_average_percentage >= scipy.mean(percentage):
+				flag = flag + 1
+				print data[word], percentage,"AP:", scipy.mean(percentage)
 			else:
-				percentage.append(0) #Bigram value is 0 as it doesn't exist
-		
-		if high_frequency_bigrams != 0:
-			high_frequency_bigrams_percentage = ((high_frequency_bigrams / len(percentage)) * 100)
-		else:
-			high_frequency_bigrams_percentage = 0
-
-		total_flags = total_flags + 1
-
-		if total_average_percentage >= scipy.mean(percentage):
-			flag = flag + 1
-			print data[word], "AP:", scipy.mean(percentage), "GBP:", high_frequency_bigrams_percentage, 1 #Print word and percentage list
-		elif total_average_good_bigram_percentage >= high_frequency_bigrams_percentage:
-			flag = flag + 1
-			print data[word], "AP:", scipy.mean(percentage), "GBP:", high_frequency_bigrams_percentage, 1 #Print word and percentage list
-		else:
-			print data[word], "AP:", scipy.mean(percentage), "GBP:", high_frequency_bigrams_percentage, 0 #Print word and percentage list
+				print data[word], percentage, "AP:", scipy.mean(percentage)
 
 
-		percentage = [] #Clear percentage list
-		high_frequency_bigrams = 0
+			percentage = [] #Clear percentage list
 
 	print 67 * "*"
 	print "Detection Rate:", flag / total_flags * 100
@@ -250,11 +230,17 @@ while ans:
 	elif ans=="3":
 	  testing()
 	elif ans=="4":
-	  print("\n 4")
+		print 67 * "*"
+		print "Total Average Percentage Alexa:", percentage_list_alexa_settings
+		print "Total Average Percentage DGA:", percentage_list_dga_settings
+		print "Baseline (TAPA - TAPD):", total_average_percentage
+		print 67 * "*"
 	elif ans=="5":
+	  os.remove('settings.conf')
+	  os.remove('database.json')
 	  print("\n 5")
 	elif ans=="6":
-	  print("\nExiting...") 
+	  print("\nDeleting script data files...") 
 	  quit()
 	elif ans !="":
 	  print("\n Not Valid Choice Try again") 
