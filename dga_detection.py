@@ -7,6 +7,7 @@ import ConfigParser
 import os.path
 import json
 import tldextract #Seperating subdomain from input_domain in capture 
+import alexa
 
 def hasNumbers(inputString):
 	return any(char.isdigit() for char in inputString)
@@ -26,12 +27,19 @@ def ConfigSectionMap(section):
 
 Config = ConfigParser.ConfigParser()
 
-if os.path.isfile('settings.conf'):
-	Config.read("settings.conf")
-	percentage_list_dga_settings = float(ConfigSectionMap("Percentages")['percentage_list_dga_settings'])
-	percentage_list_alexa_settings = float(ConfigSectionMap("Percentages")['percentage_list_alexa_settings'])
-	total_average_percentage = float(ConfigSectionMap("Percentages")['baseline'])
-	total_bigrams_settings = float(ConfigSectionMap("Values")['total_bigrams_settings'])
+def load_settings():
+
+	if os.path.isfile('settings.conf'):
+		Config.read("settings.conf")
+		percentage_list_dga_settings = float(ConfigSectionMap("Percentages")['percentage_list_dga_settings'])
+		percentage_list_alexa_settings = float(ConfigSectionMap("Percentages")['percentage_list_alexa_settings'])
+		total_average_percentage = float(ConfigSectionMap("Percentages")['baseline'])
+		total_bigrams_settings = float(ConfigSectionMap("Values")['total_bigrams_settings'])
+		return total_average_percentage, total_bigrams_settings
+	else:
+		"No settings file. Please run training function."
+
+total_average_percentage, total_bigrams_settings = load_settings()
 
 
 def load_data():
@@ -58,18 +66,29 @@ def load_data():
 			print "Settings file error. Please Delete."
 			exit()
 
-		training_data = open('alexa_top_10m_domain.txt').read().splitlines() #Import alexa top domains 
+		
+		if os.path.isfile('alexa_top_1m_domain.json'):
+			with open('alexa_top_1m_domain.json', 'r') as f:
+				training_data = json.load(f)
+		else:
+			print "Downloading Alexa Top 1m Domains..."
+			training_data = alexa.top_list(1000000)
+			with open('alexa_top_1m_domain.json', 'w') as f:
+				json.dump(training_data, f)
+
+
 		bigram_dict = {} #Define bigram_dict
 		total_bigrams = 0 #Set initial total to 0
-		for word in xrange(len(training_data)): #Run through each word in the training list
-			if len(training_data[word]) > 5 and "-" not in training_data[word]:
-				print "Processing domain:", word #Print word number in list
-				for  bigram_position in xrange(len(training_data[word]) - 1): #Run through each bigram in word
+		for input_domain in xrange(len(training_data)): #Run through each input_domain in the training list
+			input_domain = tldextract.extract(training_data[input_domain][1])
+			if len(input_domain.domain) > 5 and "-" not in input_domain:
+				print "Processing domain:", input_domain.domain #Print input_domain number in list
+				for  bigram_position in xrange(len(input_domain.domain) - 1): #Run through each bigram in input_domain
 					total_bigrams = total_bigrams + 1 #Increment bigram total
-					if training_data[word][bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram already exists in dictionary
-						bigram_dict[training_data[word][bigram_position:bigram_position + 2]] = bigram_dict[training_data[word][bigram_position:bigram_position + 2]] + 1 #Increment dictionary value by 1
+					if input_domain.domain[bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram already exists in dictionary
+						bigram_dict[input_domain.domain[bigram_position:bigram_position + 2]] = bigram_dict[input_domain.domain[bigram_position:bigram_position + 2]] + 1 #Increment dictionary value by 1
 					else:
-						bigram_dict[training_data[word][bigram_position:bigram_position + 2]] = 1 #Add bigram to list and set value to 1
+						bigram_dict[input_domain.domain[bigram_position:bigram_position + 2]] = 1 #Add bigram to list and set value to 1
 
 		pprint(bigram_dict) #Print bigram list
 		with open('database.json', 'w') as f:
@@ -82,38 +101,40 @@ def process_data(bigram_dict, total_bigrams):
 	data = open('alexa_training.txt').read().splitlines()
 	percentage_list_alexa = [] #Define average_percentage
 
-	for word in xrange(len(data)): #Run through each word in the data
-		if len(data[word]) > 5 and "-" not in data[word]:
+	for input_domain in xrange(len(data)): #Run through each input_domain in the data
+		input_domain = tldextract.extract(data[input_domain])
+		if len(input_domain.domain) > 5 and "-" not in input_domain.domain:
 			percentage = [] #Clear percentage list
-			for  bigram_position in xrange(len(data[word]) - 1): #Run through each bigram in the data
-				if data[word][bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary 
-					percentage.append((bigram_dict[data[word][bigram_position:bigram_position + 2]] / total_bigrams) * 100) #Get bigram dictionary value and convert to percantage
+			for  bigram_position in xrange(len(input_domain.domain) - 1): #Run through each bigram in the data
+				if input_domain.domain[bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary 
+					percentage.append((bigram_dict[input_domain.domain[bigram_position:bigram_position + 2]] / total_bigrams) * 100) #Get bigram dictionary value and convert to percantage
 				else:
 					percentage.append(0) #Bigram value is 0 as it doesn't exist
 
 			percentage_list_alexa.append(scipy.mean(percentage)) #Add percentage value to list for total average
-			print data[word], "AP:", scipy.mean(percentage) #Print word and percentage list
+			print input_domain.domain, "AP:", scipy.mean(percentage) #Print input_domain and percentage list
 
 
 	data = open('dga_training.txt').read().splitlines()
 	percentage_list_dga = [] #Define average_percentage
 
-	for word in xrange(len(data)): #Run through each word in the data
-		if len(data[word]) > 5 and "-" not in data[word]:
+	for input_domain in xrange(len(data)): #Run through each input_domain in the data
+		input_domain = tldextract.extract(data[input_domain])
+		if len(input_domain.domain) > 5 and "-" not in input_domain.domain:
 			percentage = [] #Clear percentage list
-			for  bigram_position in xrange(len(data[word]) - 1): #Run through each bigram in the data
-				if data[word][bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary 
-					percentage.append((bigram_dict[data[word][bigram_position:bigram_position + 2]] / total_bigrams) * 100) #Get bigram dictionary value and convert to percantage
+			for  bigram_position in xrange(len(input_domain.domain) - 1): #Run through each bigram in the data
+				if input_domain.domain[bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary 
+					percentage.append((bigram_dict[input_domain.domain[bigram_position:bigram_position + 2]] / total_bigrams) * 100) #Get bigram dictionary value and convert to percantage
 				else:
 					percentage.append(0) #Bigram value is 0 as it doesn't exist
 
 			percentage_list_dga.append(scipy.mean(percentage)) #Add percentage value to list for total average
-			print data[word], "AP:", scipy.mean(percentage) #Print word and percentage list
+			print input_domain.domain, "AP:", scipy.mean(percentage) #Print input_domain and percentage list
 
 	print 67 * "*"
 	print "Total Average Percentage Alexa:", scipy.mean(percentage_list_alexa), "( Min:", min(percentage_list_alexa), "Max:", max(percentage_list_alexa), ")" #Get average percentage
 	print "Total Average Percentage DGA:", scipy.mean(percentage_list_dga), "( Min:", min(percentage_list_dga), "Max:", max(percentage_list_dga), ")" #Get average percentage
-	print "TAPA - TAPD:", (((scipy.mean(percentage_list_alexa) - scipy.mean(percentage_list_dga)) / 2) + scipy.mean(percentage_list_dga))
+	print "Baseline:", (((scipy.mean(percentage_list_alexa) - scipy.mean(percentage_list_dga)) / 2) + scipy.mean(percentage_list_dga))
 	print 67 * "*"
 
 	cfgfile = open("settings.conf",'w')
@@ -145,7 +166,8 @@ def check_domain(input_domain):
 			percentage.append(0) #Bigram value is 0 as it doesn't exist
 
 	if total_average_percentage >= scipy.mean(percentage):
-		print total_average_percentage, scipy.mean(percentage)
+		print 67 * "*"
+		print 'Baseline:', total_average_percentage, 'Domain Average Bigram Percentage:',scipy.mean(percentage)
 		return 1
 	else:
 		return 0
@@ -153,6 +175,9 @@ def check_domain(input_domain):
 	percentage = [] #Clear percentage list
 
 def capture_traffic(pkt):
+
+	total_average_percentage, total_bigrams_settings = load_settings()
+
 	if IP in pkt:
 		ip_src = pkt[IP].src
 		ip_dst = pkt[IP].dst
@@ -160,14 +185,17 @@ def capture_traffic(pkt):
 			input_domain = tldextract.extract(pkt.getlayer(DNS).qd.qname)
 			if input_domain.suffix != '' and input_domain.suffix != 'localdomain' and input_domain.subdomain == '' and len(input_domain.domain) > 5 and "-" not in input_domain: #Domains are no smaller than 6
 				if check_domain(input_domain.domain) == 1:
-					print input_domain.domain
+					print 'Extracted Domain:', input_domain.domain
 					print str(ip_src) +  "->",  str(ip_dst), "Warning! Potential DGA Detected ", "(", (pkt.getlayer(DNS).qd.qname), ")"
+					print 67 * "*"
+					print '\n'
+
 				#else:
 					#print "Safe input_domain", "(" + input_domain + ")"
 
 def testing():
 
-	data = open('test_domains.txt').read().splitlines()
+	total_average_percentage, total_bigrams_settings = load_settings()
 
 	if os.path.isfile('database.json'):
 		with open('database.json', 'r') as f:
@@ -176,15 +204,21 @@ def testing():
 		    # if the file is empty the ValueError will be thrown
 		    except ValueError:
 		        bigram_dict = {}
+
+
+	data = open('test_domains.txt').read().splitlines()
+
+
 	flag = 0
 	total_flags = 0
 	percentage = [] #Define percentage
 
-	for word in xrange(len(data)): #Run through each word in the data
-		if len(data[word]) > 5 and "-" not in data[word]:
-			for  bigram_position in xrange(len(data[word]) - 1): #Run through each bigram in the data
-				if data[word][bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary
-					percentage.append((round(((bigram_dict[data[word][bigram_position:bigram_position + 2]] / total_bigrams_settings) * 100), 2))) #Get bigram dictionary value and convert to percantage
+	for input_domain in xrange(len(data)): #Run through each input_domain in the data
+		input_domain = tldextract.extract(data[input_domain])
+		if len(input_domain.domain) > 5 and "-" not in input_domain.domain:
+			for  bigram_position in xrange(len(input_domain.domain) - 1): #Run through each bigram in the data
+				if input_domain.domain[bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary
+					percentage.append((round(((bigram_dict[input_domain.domain[bigram_position:bigram_position + 2]] / total_bigrams_settings) * 100), 2))) #Get bigram dictionary value and convert to percantage
 				else:
 					percentage.append(0) #Bigram value is 0 as it doesn't exist
 			
@@ -193,9 +227,9 @@ def testing():
 
 			if total_average_percentage >= scipy.mean(percentage):
 				flag = flag + 1
-				print data[word], percentage,"AP:", scipy.mean(percentage)
+				print input_domain.domain, percentage,"AP:", scipy.mean(percentage)
 			else:
-				print data[word], percentage, "AP:", scipy.mean(percentage)
+				print input_domain.domain, percentage, "AP:", scipy.mean(percentage)
 
 
 			percentage = [] #Clear percentage list
@@ -212,7 +246,7 @@ while ans:
 	2. Start Capturing DNS
 	3. Testing
 	4. View Config File
-	5. Reset Config File
+	5. Delete script data
 	6. Exit/Quit
 	""")
 	print 67 * "-"
@@ -228,29 +262,33 @@ while ans:
 			sys.exit(1)
 		sniff(iface = interface,filter = "port 53", prn = capture_traffic, store = 0)
 	elif ans=="3":
-	  testing()
+		if os.path.isfile('settings.conf') and os.path.isfile('database.json'):
+			testing()
+		else:
+			print "\nYou must run the training algoirthm first."
 	elif ans=="4":
-		print 67 * "*"
-		print "Total Average Percentage Alexa:", percentage_list_alexa_settings
-		print "Total Average Percentage DGA:", percentage_list_dga_settings
-		print "Baseline (TAPA - TAPD):", total_average_percentage
-		print 67 * "*"
+		if os.path.isfile('settings.conf') and os.path.isfile('database.json'):
+			print 67 * "*"
+			print "Total Average Percentage Alexa:", percentage_list_alexa_settings
+			print "Total Average Percentage DGA:", percentage_list_dga_settings
+			print "Baseline (Baseline):", total_average_percentage
+			print 67 * "*"
+		else:
+			print "\n No data files available."
 	elif ans=="5":
-	  os.remove('settings.conf')
-	  os.remove('database.json')
-	  print("\n 5")
+		if os.path.isfile('settings.conf') and os.path.isfile('database.json'):
+		  os.remove('settings.conf')
+		  os.remove('database.json')
+		  print "\nData has been deleted"
+		else:
+			print "\nNo data to delete."
 	elif ans=="6":
 	  print("\nDeleting script data files...") 
 	  quit()
 	elif ans !="":
 	  print("\n Not Valid Choice Try again") 
 
-#Add to a raspberry device, MITM and then use pushnotification to notify of network activity
-#Look at length of word 
-#0's being added randomly
-#Criminals can bypass by using high frequency bigrams
 
-#1 TEST FOR LETTERS AND NUMBER AND 1 TEST FOR ONLY LETTERS?!?!?!?!?!?!
 
 
 
