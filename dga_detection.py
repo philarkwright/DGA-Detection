@@ -42,7 +42,10 @@ def load_settings():
 def load_data():
 
 
+
 	if os.path.isfile('database.json') and os.path.isfile('settings.conf'):
+
+		total_average_percentage, total_bigrams_settings = load_settings()
 
 		with open('database.json', 'r') as f:
 		    try:
