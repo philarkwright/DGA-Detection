@@ -41,6 +41,7 @@ def load_settings():
 
 def load_data():
 
+
 	if os.path.isfile('database.json') and os.path.isfile('settings.conf'):
 
 		with open('database.json', 'r') as f:
