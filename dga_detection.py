@@ -29,8 +29,8 @@ Config = ConfigParser.ConfigParser()
 
 def load_settings():
 
-	if os.path.isfile('settings.conf'):
-		Config.read("settings.conf")
+	if os.path.isfile('/data/settings.conf'):
+		Config.read("/data/settings.conf")
 		percentage_list_dga_settings = float(ConfigSectionMap("Percentages")['percentage_list_dga_settings'])
 		percentage_list_alexa_settings = float(ConfigSectionMap("Percentages")['percentage_list_alexa_settings'])
 		total_average_percentage = float(ConfigSectionMap("Percentages")['baseline'])
@@ -43,11 +43,11 @@ def load_data():
 
 
 
-	if os.path.isfile('database.json') and os.path.isfile('settings.conf'):
+	if os.path.isfile('/data/database.json') and os.path.isfile('/data/settings.conf'):
 
 		total_average_percentage, total_bigrams_settings = load_settings()
 
-		with open('database.json', 'r') as f:
+		with open('/data/database.json', 'r') as f:
 		    try:
 		        bigram_dict = json.load(f)
 		        process_data(bigram_dict, total_bigrams_settings) #Call process_data
@@ -57,7 +57,7 @@ def load_data():
 	else:
 
 		try:
-			cfgfile = open("settings.conf",'w')
+			cfgfile = open("/data/settings.conf",'w')
 			Config.add_section('Percentages')
 			Config.add_section('Values')
 			Config.set('Percentages','total_average_percentage', 0)
@@ -92,14 +92,14 @@ def load_data():
 						bigram_dict[input_domain.domain[bigram_position:bigram_position + 2]] = 1 #Add bigram to list and set value to 1
 
 		pprint(bigram_dict) #Print bigram list
-		with open('database.json', 'w') as f:
+		with open('/data/database.json', 'w') as f:
 			json.dump(bigram_dict, f)
 
 		process_data(bigram_dict, total_bigrams) #Call process_data
 
 def process_data(bigram_dict, total_bigrams):
 
-	data = open('alexa_training.txt').read().splitlines()
+	data = open('/data/alexa_training.txt').read().splitlines()
 	percentage_list_alexa = [] #Define average_percentage
 
 	for input_domain in xrange(len(data)): #Run through each input_domain in the data
@@ -116,7 +116,7 @@ def process_data(bigram_dict, total_bigrams):
 			print input_domain.domain, "AP:", scipy.mean(percentage) #Print input_domain and percentage list
 
 
-	data = open('dga_training.txt').read().splitlines()
+	data = open('/data/dga_training.txt').read().splitlines()
 	percentage_list_dga = [] #Define average_percentage
 
 	for input_domain in xrange(len(data)): #Run through each input_domain in the data
@@ -138,7 +138,7 @@ def process_data(bigram_dict, total_bigrams):
 	print "Baseline:", (((scipy.mean(percentage_list_alexa) - scipy.mean(percentage_list_dga)) / 2) + scipy.mean(percentage_list_dga))
 	print 67 * "*"
 
-	cfgfile = open("settings.conf",'w')
+	cfgfile = open("/data/settings.conf",'w')
 	Config.set('Percentages','percentage_list_alexa_settings', scipy.mean(percentage_list_alexa))
 	Config.set('Percentages','percentage_list_dga_settings', scipy.mean(percentage_list_dga))
 	Config.set('Percentages','baseline', (((scipy.mean(percentage_list_alexa) - scipy.mean(percentage_list_dga)) / 2) + scipy.mean(percentage_list_dga)))
@@ -150,8 +150,8 @@ def process_data(bigram_dict, total_bigrams):
 
 def check_domain(input_domain):
 
-	if os.path.isfile('database.json'):
-		with open('database.json', 'r') as f:
+	if os.path.isfile('/data/database.json'):
+		with open('/data/database.json', 'r') as f:
 		    try:
 		        bigram_dict = json.load(f)
 		    # if the file is empty the ValueError will be thrown
@@ -198,8 +198,8 @@ def testing():
 
 	total_average_percentage, total_bigrams_settings = load_settings()
 
-	if os.path.isfile('database.json'):
-		with open('database.json', 'r') as f:
+	if os.path.isfile('/data/database.json'):
+		with open('/data/database.json', 'r') as f:
 		    try:
 		        bigram_dict = json.load(f)
 		    # if the file is empty the ValueError will be thrown
@@ -207,7 +207,7 @@ def testing():
 		        bigram_dict = {}
 
 
-	data = open('test_domains.txt').read().splitlines()
+	data = open('/data/test_domains.txt').read().splitlines()
 
 
 	flag = 0
@@ -263,12 +263,12 @@ while ans:
 			sys.exit(1)
 		sniff(iface = interface,filter = "port 53", prn = capture_traffic, store = 0)
 	elif ans=="3":
-		if os.path.isfile('settings.conf') and os.path.isfile('database.json'):
+		if os.path.isfile('/data/settings.conf') and os.path.isfile('/data/database.json'):
 			testing()
 		else:
 			print "\nYou must run the training algoirthm first."
 	elif ans=="4":
-		if os.path.isfile('settings.conf') and os.path.isfile('database.json'):
+		if os.path.isfile('/data/settings.conf') and os.path.isfile('/data/database.json'):
 			print 67 * "*"
 			print "Total Average Percentage Alexa:", percentage_list_alexa_settings
 			print "Total Average Percentage DGA:", percentage_list_dga_settings
@@ -277,9 +277,9 @@ while ans:
 		else:
 			print "\n No data files available."
 	elif ans=="5":
-		if os.path.isfile('settings.conf') and os.path.isfile('database.json'):
-		  os.remove('settings.conf')
-		  os.remove('database.json')
+		if os.path.isfile('/data/settings.conf') and os.path.isfile('/data/database.json'):
+		  os.remove('/data/settings.conf')
+		  os.remove('/data/database.json')
 		  print "\nData has been deleted"
 		else:
 			print "\nNo data to delete."
