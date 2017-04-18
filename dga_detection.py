@@ -39,9 +39,6 @@ def load_settings():
 	else:
 		"No settings file. Please run training function."
 
-total_average_percentage, total_bigrams_settings = load_settings()
-
-
 def load_data():
 
 	if os.path.isfile('database.json') and os.path.isfile('settings.conf'):
