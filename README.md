@@ -9,4 +9,11 @@ chmod +x install.sh
 ./install.sh
 ```
 
+## Use
+
+```python
+sudo python dga_detection.py
+```
+
+
 
