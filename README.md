@@ -1,5 +1,7 @@
 # DGA-Detection
 
+Testing on SIFT Workstation. Download here: https://digital-forensics.sans.org/community/downloads/SIFT-Tool-Listing.pdf
+
 ## Install
 
 ```python
