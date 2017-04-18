@@ -43,11 +43,11 @@ def load_data():
 
 
 
-	if os.path.isfile('datadatabase.json') and os.path.isfile('data/settings.conf'):
+	if os.path.isfile('data/database.json') and os.path.isfile('data/settings.conf'):
 
 		total_average_percentage, total_bigrams_settings = load_settings()
 
-		with open('datadatabase.json', 'r') as f:
+		with open('data/database.json', 'r') as f:
 		    try:
 		        bigram_dict = json.load(f)
 		        process_data(bigram_dict, total_bigrams_settings) #Call process_data
@@ -68,13 +68,13 @@ def load_data():
 			exit()
 
 		
-		if os.path.isfile('alexa_top_1m_domain.json'):
-			with open('alexa_top_1m_domain.json', 'r') as f:
+		if os.path.isfile('data/alexa_top_1m_domain.json'):
+			with open('data/alexa_top_1m_domain.json', 'r') as f:
 				training_data = json.load(f)
 		else:
 			print "Downloading Alexa Top 1m Domains..."
 			training_data = alexa.top_list(1000000)
-			with open('alexa_top_1m_domain.json', 'w') as f:
+			with open('data/alexa_top_1m_domain.json', 'w') as f:
 				json.dump(training_data, f)
 
 
@@ -92,7 +92,7 @@ def load_data():
 						bigram_dict[input_domain.domain[bigram_position:bigram_position + 2]] = 1 #Add bigram to list and set value to 1
 
 		pprint(bigram_dict) #Print bigram list
-		with open('datadatabase.json', 'w') as f:
+		with open('data/database.json', 'w') as f:
 			json.dump(bigram_dict, f)
 
 		process_data(bigram_dict, total_bigrams) #Call process_data
@@ -150,8 +150,8 @@ def process_data(bigram_dict, total_bigrams):
 
 def check_domain(input_domain):
 
-	if os.path.isfile('datadatabase.json'):
-		with open('datadatabase.json', 'r') as f:
+	if os.path.isfile('data/database.json'):
+		with open('data/database.json', 'r') as f:
 		    try:
 		        bigram_dict = json.load(f)
 		    # if the file is empty the ValueError will be thrown
@@ -263,12 +263,12 @@ while ans:
 			sys.exit(1)
 		sniff(iface = interface,filter = "port 53", prn = capture_traffic, store = 0)
 	elif ans=="3":
-		if os.path.isfile('data/settings.conf') and os.path.isfile('datadatabase.json'):
+		if os.path.isfile('data/settings.conf') and os.path.isfile('data/database.json'):
 			testing()
 		else:
 			print "\nYou must run the training algoirthm first."
 	elif ans=="4":
-		if os.path.isfile('data/settings.conf') and os.path.isfile('datadatabase.json'):
+		if os.path.isfile('data/settings.conf') and os.path.isfile('data/database.json'):
 			print 67 * "*"
 			print "Total Average Percentage Alexa:", percentage_list_alexa_settings
 			print "Total Average Percentage DGA:", percentage_list_dga_settings
@@ -277,9 +277,9 @@ while ans:
 		else:
 			print "\n No data files available."
 	elif ans=="5":
-		if os.path.isfile('data/settings.conf') and os.path.isfile('datadatabase.json'):
+		if os.path.isfile('data/settings.conf') and os.path.isfile('data/database.json'):
 		  os.remove('data/settings.conf')
-		  os.remove('datadatabase.json')
+		  os.remove('data/database.json')
 		  print "\nData has been deleted"
 		else:
 			print "\nNo data to delete."
