@@ -1,3 +1,3 @@
 scapy
 tldextract
--e git://github.com/davedash/Alexa-Top-Sites.git#egg=alexa-top-sites
+-e https://github.com/philarkwright/Alexa-Top-Sites.git
