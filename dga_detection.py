@@ -37,7 +37,7 @@ def load_settings():
 		total_bigrams_settings = float(ConfigSectionMap("Values")['total_bigrams_settings'])
 		return total_average_percentage, total_bigrams_settings
 	else:
-		"No settings file. Please run training function."
+		print "No settings file. Please run training function."
 
 def load_data():
 
@@ -82,7 +82,7 @@ def load_data():
 		total_bigrams = 0 #Set initial total to 0
 		for input_domain in xrange(len(training_data)): #Run through each input_domain in the training list
 			input_domain = tldextract.extract(training_data[input_domain][1])
-			if len(input_domain.domain) > 5 and "-" not in input_domain:
+			if len(input_domain.domain) > 5 and "-" not in input_domain.domain:
 				print "Processing domain:", input_domain.domain #Print input_domain number in list
 				for  bigram_position in xrange(len(input_domain.domain) - 1): #Run through each bigram in input_domain
 					total_bigrams = total_bigrams + 1 #Increment bigram total
@@ -148,6 +148,52 @@ def process_data(bigram_dict, total_bigrams):
 
 	percentage = [] #Define percentage
 
+
+def testing():
+
+	total_average_percentage, total_bigrams_settings = load_settings()
+
+	if os.path.isfile('datadatabase.json'):
+		with open('datadatabase.json', 'r') as f:
+		    try:
+		        bigram_dict = json.load(f)
+		    # if the file is empty the ValueError will be thrown
+		    except ValueError:
+		        bigram_dict = {}
+
+
+	data = open('data/test_domains.txt').read().splitlines()
+
+
+	flag = 0
+	total_flags = 0
+	percentage = [] #Define percentage
+
+	for input_domain in xrange(len(data)): #Run through each input_domain in the data
+		input_domain = tldextract.extract(data[input_domain])
+		if len(input_domain.domain) > 5 and "-" not in input_domain.domain:
+			for  bigram_position in xrange(len(input_domain.domain) - 1): #Run through each bigram in the data
+				if input_domain.domain[bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary
+					percentage.append((round(((bigram_dict[input_domain.domain[bigram_position:bigram_position + 2]] / total_bigrams_settings) * 100), 2))) #Get bigram dictionary value and convert to percantage
+				else:
+					percentage.append(0) #Bigram value is 0 as it doesn't exist
+			
+
+			total_flags = total_flags + 1
+
+			if total_average_percentage >= scipy.mean(percentage):
+				flag = flag + 1
+				print input_domain.domain, percentage,"AP:", scipy.mean(percentage)
+			else:
+				print input_domain.domain, percentage, "AP:", scipy.mean(percentage)
+
+
+			percentage = [] #Clear percentage list
+
+	print 67 * "*"
+	print "Detection Rate:", flag / total_flags * 100
+	print 67 * "*"
+
 def check_domain(input_domain):
 
 	if os.path.isfile('data/database.json'):
@@ -194,50 +240,6 @@ def capture_traffic(pkt):
 				#else:
 					#print "Safe input_domain", "(" + input_domain + ")"
 
-def testing():
-
-	total_average_percentage, total_bigrams_settings = load_settings()
-
-	if os.path.isfile('datadatabase.json'):
-		with open('datadatabase.json', 'r') as f:
-		    try:
-		        bigram_dict = json.load(f)
-		    # if the file is empty the ValueError will be thrown
-		    except ValueError:
-		        bigram_dict = {}
-
-
-	data = open('data/test_domains.txt').read().splitlines()
-
-
-	flag = 0
-	total_flags = 0
-	percentage = [] #Define percentage
-
-	for input_domain in xrange(len(data)): #Run through each input_domain in the data
-		input_domain = tldextract.extract(data[input_domain])
-		if len(input_domain.domain) > 5 and "-" not in input_domain.domain:
-			for  bigram_position in xrange(len(input_domain.domain) - 1): #Run through each bigram in the data
-				if input_domain.domain[bigram_position:bigram_position + 2] in bigram_dict: #Check if bigram is in dictionary
-					percentage.append((round(((bigram_dict[input_domain.domain[bigram_position:bigram_position + 2]] / total_bigrams_settings) * 100), 2))) #Get bigram dictionary value and convert to percantage
-				else:
-					percentage.append(0) #Bigram value is 0 as it doesn't exist
-			
-
-			total_flags = total_flags + 1
-
-			if total_average_percentage >= scipy.mean(percentage):
-				flag = flag + 1
-				print input_domain.domain, percentage,"AP:", scipy.mean(percentage)
-			else:
-				print input_domain.domain, percentage, "AP:", scipy.mean(percentage)
-
-
-			percentage = [] #Clear percentage list
-
-	print 67 * "*"
-	print "Detection Rate:", flag / total_flags * 100
-	print 67 * "*"
 
 ans=True
 while ans:
