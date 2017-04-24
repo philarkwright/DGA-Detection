@@ -153,8 +153,8 @@ def testing():
 
 	total_average_percentage, total_bigrams_settings = load_settings()
 
-	if os.path.isfile('datadatabase.json'):
-		with open('datadatabase.json', 'r') as f:
+	if os.path.isfile('data/database.json'):
+		with open('data/database.json', 'r') as f:
 		    try:
 		        bigram_dict = json.load(f)
 		    # if the file is empty the ValueError will be thrown
