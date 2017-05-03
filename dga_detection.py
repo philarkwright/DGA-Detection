@@ -196,6 +196,8 @@ def testing():
 
 def check_domain(input_domain):
 
+	total_average_percentage, total_bigrams_settings = load_settings()
+
 	if os.path.isfile('data/database.json'):
 		with open('data/database.json', 'r') as f:
 		    try:
