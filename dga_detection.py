@@ -33,9 +33,9 @@ def load_settings():
 		Config.read("data/settings.conf")
 		percentage_list_dga_settings = float(ConfigSectionMap("Percentages")['percentage_list_dga_settings'])
 		percentage_list_alexa_settings = float(ConfigSectionMap("Percentages")['percentage_list_alexa_settings'])
-		total_average_percentage = float(ConfigSectionMap("Percentages")['baseline'])
+		baseline = float(ConfigSectionMap("Percentages")['baseline'])
 		total_bigrams_settings = float(ConfigSectionMap("Values")['total_bigrams_settings'])
-		return total_average_percentage, total_bigrams_settings
+		return baseline, total_bigrams_settings
 	else:
 		print "No settings file. Please run training function."
 
@@ -45,7 +45,7 @@ def load_data():
 
 	if os.path.isfile('data/database.json') and os.path.isfile('data/settings.conf'):
 
-		total_average_percentage, total_bigrams_settings = load_settings()
+		baseline, total_bigrams_settings = load_settings()
 
 		with open('data/database.json', 'r') as f:
 		    try:
@@ -60,7 +60,7 @@ def load_data():
 			cfgfile = open("data/settings.conf",'w')
 			Config.add_section('Percentages')
 			Config.add_section('Values')
-			Config.set('Percentages','total_average_percentage', 0)
+			Config.set('Percentages','baseline', 0)
 			Config.write(cfgfile)
 			cfgfile.close()
 		except:
@@ -151,7 +151,7 @@ def process_data(bigram_dict, total_bigrams):
 
 def testing():
 
-	total_average_percentage, total_bigrams_settings = load_settings()
+	baseline, total_bigrams_settings = load_settings()
 
 	if os.path.isfile('data/database.json'):
 		with open('data/database.json', 'r') as f:
@@ -181,7 +181,7 @@ def testing():
 
 			total_flags = total_flags + 1
 
-			if total_average_percentage >= scipy.mean(percentage):
+			if baseline >= scipy.mean(percentage):
 				flag = flag + 1
 				print input_domain.domain, percentage,"AP:", scipy.mean(percentage)
 			else:
@@ -196,7 +196,7 @@ def testing():
 
 def check_domain(input_domain):
 
-	total_average_percentage, total_bigrams_settings = load_settings()
+	baseline, total_bigrams_settings = load_settings()
 
 	if os.path.isfile('data/database.json'):
 		with open('data/database.json', 'r') as f:
@@ -214,9 +214,9 @@ def check_domain(input_domain):
 		else:
 			percentage.append(0) #Bigram value is 0 as it doesn't exist
 
-	if total_average_percentage >= scipy.mean(percentage):
+	if baseline >= scipy.mean(percentage):
 		print 67 * "*"
-		print 'Baseline:', total_average_percentage, 'Domain Average Bigram Percentage:',scipy.mean(percentage)
+		print 'Baseline:', baseline, 'Domain Average Bigram Percentage:',scipy.mean(percentage)
 		return 1
 	else:
 		return 0
@@ -225,7 +225,7 @@ def check_domain(input_domain):
 
 def capture_traffic(pkt):
 
-	total_average_percentage, total_bigrams_settings = load_settings()
+	baseline, total_bigrams_settings = load_settings()
 
 	if IP in pkt:
 		ip_src = pkt[IP].src
@@ -273,10 +273,10 @@ while ans:
 			print "\nYou must run the training algoirthm first."
 	elif ans=="4":
 		if os.path.isfile('data/settings.conf') and os.path.isfile('data/database.json'):
+			baseline, total_bigrams_settings = load_settings()
 			print 67 * "*"
-			print "Total Average Percentage Alexa:", percentage_list_alexa_settings
-			print "Total Average Percentage DGA:", percentage_list_dga_settings
-			print "Baseline (Baseline):", total_average_percentage
+			print "Total Bigrams:", total_bigrams_settings
+			print "Baseline (Baseline):", baseline
 			print 67 * "*"
 		else:
 			print "\n No data files available."
