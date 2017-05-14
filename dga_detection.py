@@ -1,3 +1,7 @@
+#Software License Agreement (BSD License)
+#Copyright (c) 2017 Phil Arkwright
+#All rights reserved.
+
 from __future__ import division
 from pprint import pprint
 from scapy.all import *
