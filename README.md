@@ -1,6 +1,8 @@
 # DGA-Detection
-
-Testing on SIFT Workstation. Download here: https://digital-forensics.sans.org/community/downloads/SIFT-Tool-Listing.pdf
+This System has been tested on Ubuntu and RaspberryPi.
+Currently I have my raspberrypi setup as a DNS server using Bind9.
+The DGA-Detection script is also run on the raspberrypi and read the requests.
+The requests are then processed.
 
 ## Install
 
