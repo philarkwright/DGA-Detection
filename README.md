@@ -41,6 +41,6 @@ Contact me via Twitter @philarkwright
 
 ##Things to do
 
-- [-] Add Whitelisting
-- [-] Add Pushbullet (Notify admin)
-- [-] Fix Lag on capture traffic alerts
+- [ ] Add Whitelisting
+- [ ] Add Pushbullet (Notify admin)
+- [ ] Fix Lag on capture traffic alerts
