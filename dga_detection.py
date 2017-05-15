@@ -31,6 +31,7 @@ def ConfigSectionMap(section):
 
 Config = ConfigParser.ConfigParser()
 previous_domain = ''
+whitelist = {}
 
 def load_settings():
 
@@ -107,6 +108,7 @@ def process_data(bigram_dict, total_bigrams):
 			data = json.load(f)
 
 	percentage_list_alexa = [] #Define average_percentage
+
 
 	for input_domain in xrange(len(data)): #Run through each input_domain in the data
 		input_domain = tldextract.extract(data[input_domain][1])
@@ -231,8 +233,11 @@ def check_domain(input_domain):
 
 def capture_traffic(pkt):
 
-	baseline, total_bigrams_settings = load_settings()
 	global previous_domain
+	global baseline
+	global total_bigram_settings
+	global previous_domain
+	global whitelist
 
 	if IP in pkt:
 		ip_src = pkt[IP].src
@@ -241,7 +246,7 @@ def capture_traffic(pkt):
 			input_domain = tldextract.extract(pkt.getlayer(DNS).qd.qname)
 			if input_domain.suffix != '' and input_domain.suffix != 'localdomain' and input_domain.subdomain == '' and len(input_domain.domain) > 5 and "-" not in input_domain and previous_domain != input_domain.domain: #Domains are no smaller than 6
 				previous_domain = input_domain.domain
-				if check_domain(input_domain.domain) == 1:
+				if ("%s.%s" % (input_domain.domain, input_domain.suffix)) not in whitelist.values() and check_domain(input_domain.domain) == 1:
 					print 'Extracted Domain:', input_domain.domain
 					print str(ip_src) +  "->",  str(ip_dst), "Warning! Potential DGA Detected ", "(", (pkt.getlayer(DNS).qd.qname), ")"
 					print 67 * "*"
@@ -267,6 +272,12 @@ while ans:
 	if ans=="1": 
 		load_data()
 	elif ans=="2":
+		print 'Please wait whiles whitelist is read...'
+		with open('data/alexa_top_1m_domain.json', 'r') as f:
+			whitelist = json.load(f)
+		whitelist = dict((k) for k in whitelist)
+		###################################
+		baseline, total_bigrams_settings = load_settings()
 		try:
 			interface = raw_input("[*] Enter Desired Interface: ")
 		except KeyboardInterrupt:
@@ -274,6 +285,8 @@ while ans:
 			print "[*] Exiting..."
 			sys.exit(1)
 		sniff(iface = interface,filter = "port 53", prn = capture_traffic, store = 0)
+		#Using Alexa as a white list (Potentially not the best method incase malware domains make it in the list) More filtering needs to be done.
+		#This is in beta and might want to be modified or removed.
 	elif ans=="3":
 		if os.path.isfile('data/settings.conf') and os.path.isfile('data/database.json'):
 			testing()
