@@ -244,7 +244,7 @@ def capture_traffic(pkt):
 		ip_dst = pkt[IP].dst
 		if pkt.haslayer(DNS) and pkt.getlayer(DNS).qr == 0:
 			input_domain = tldextract.extract(pkt.getlayer(DNS).qd.qname)
-			if input_domain.suffix != '' and input_domain.suffix != 'localdomain' and input_domain.subdomain == '' and len(input_domain.domain) > 5 and "-" not in input_domain and previous_domain != input_domain.domain: #Domains are no smaller than 6
+			if input_domain.suffix != '' and input_domain.suffix != 'localdomain' and input_domain.subdomain == '' and len(input_domain.domain) > 5 and "-" not in input_domain.domain and previous_domain != input_domain.domain: #Domains are no smaller than 6
 				previous_domain = input_domain.domain
 				if ("%s.%s" % (input_domain.domain, input_domain.suffix)) not in whitelist.values() and check_domain(input_domain.domain) == 1:
 					print 'Extracted Domain:', input_domain.domain
@@ -312,7 +312,7 @@ while ans:
 		else:
 			print "\nNo data to delete."
 	elif ans=="6":
-	  print("\nDeleting script data files...") 
+	  print("\nExiting") 
 	  quit()
 	elif ans !="":
 	  print("\n Not Valid Choice Try again") 
