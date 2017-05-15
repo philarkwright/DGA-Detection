@@ -39,7 +39,7 @@ NOTE: Whitelist features uses the Alexa Top 1m.
 
 Contact me via Twitter @philarkwright
 
-## Things to do
+## Completed
 
 - [ ] Add Whitelisting
 - [ ] Add Pushbullet (Notify admin)
