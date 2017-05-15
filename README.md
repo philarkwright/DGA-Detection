@@ -1,8 +1,8 @@
 # DGA-Detection
 This System has been tested on Ubuntu and RaspberryPi.
 Currently I have my raspberrypi setup as a DNS server using Bind9.
-The DGA-Detection script is also run on the raspberrypi and read the requests.
-The requests are then processed.
+The DGA-Detection script is also run on the raspberrypi and reads the requests.
+The requests are then processed to determine if they are a potential DGA or not.
 
 ## Install
 
