@@ -29,6 +29,11 @@ sudo python dga_detection.py
 ## Settings File
 - The settings file is where the model stores the baseline value used to decide whether or not a domain is a potential DGA. This value can be manually changed to increase detection rate or reduced to decrease false positives.
 
+## Live Capture Arguments
+
+```python
+nohup sudo python dga-detection.py -o 2 -i <interface>
+```
 
 ## Potential Issues
 When running the install.sh file please note that the git:// protocol uses port 9418, so you should make sure your firewall allows outbound connections to this port.
