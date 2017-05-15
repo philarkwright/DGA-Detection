@@ -30,6 +30,7 @@ def ConfigSectionMap(section):
     return dict1
 
 Config = ConfigParser.ConfigParser()
+previous_domain = ''
 
 def load_settings():
 
@@ -231,13 +232,15 @@ def check_domain(input_domain):
 def capture_traffic(pkt):
 
 	baseline, total_bigrams_settings = load_settings()
+	global previous_domain
 
 	if IP in pkt:
 		ip_src = pkt[IP].src
 		ip_dst = pkt[IP].dst
 		if pkt.haslayer(DNS) and pkt.getlayer(DNS).qr == 0:
 			input_domain = tldextract.extract(pkt.getlayer(DNS).qd.qname)
-			if input_domain.suffix != '' and input_domain.suffix != 'localdomain' and input_domain.subdomain == '' and len(input_domain.domain) > 5 and "-" not in input_domain: #Domains are no smaller than 6
+			if input_domain.suffix != '' and input_domain.suffix != 'localdomain' and input_domain.subdomain == '' and len(input_domain.domain) > 5 and "-" not in input_domain and previous_domain != input_domain.domain: #Domains are no smaller than 6
+				previous_domain = input_domain.domain
 				if check_domain(input_domain.domain) == 1:
 					print 'Extracted Domain:', input_domain.domain
 					print str(ip_src) +  "->",  str(ip_dst), "Warning! Potential DGA Detected ", "(", (pkt.getlayer(DNS).qd.qname), ")"
