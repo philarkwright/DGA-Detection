@@ -38,3 +38,9 @@ This project is still very much in development.
 NOTE: Whitelist features uses the Alexa Top 1m.
 
 Contact me via Twitter @philarkwright
+
+##Things to do
+
+- [-] Add Whitelisting
+- [-] Add Pushbullet (Notify admin)
+- [-] Fix Lag on capture traffic alerts
