@@ -14,6 +14,9 @@ import tldextract #Seperating subdomain from input_domain in capture
 import alexa
 
 from pushbullet import PushBullet
+
+import argparse
+
 pushbullet_key = ''
 if pushbullet_key != '':
 	#Configure pushbulet 
@@ -268,6 +271,31 @@ def capture_traffic(pkt):
 					#print "Safe input_domain", "(" + input_domain + ")"
 
 
+
+parser = argparse.ArgumentParser()
+parser.add_argument('-o', '--option', required=False)
+parser.add_argument('-i', '--interface', required=False)
+args = parser.parse_args()
+
+if args.option == '2':
+	if os.path.isfile('data/settings.conf'):
+		print 'Please wait whiles whitelist is read...'
+		with open('data/alexa_top_1m_domain.json', 'r') as f:
+			whitelist = json.load(f)
+		whitelist = dict((k) for k in whitelist)
+		###################################
+		baseline, total_bigrams_settings = load_settings()
+		print 'Capturing DNS Requests...'
+		sniff(iface = args.interface, filter = "port 53", prn = capture_traffic, store = 0)
+		#Using Alexa as a white list (Potentially not the best method incase malware domains make it in the list) More filtering needs to be done.
+		#This is in beta and might want to be modified or removed.
+	else:
+		print 67 * '#'
+		print 'You must run the training algoirthm first.'
+		print 67 * '#'
+		exit()
+
+
 ans=True
 while ans:
 	print 30 * "-" , "MENU" , 30 * "-"
@@ -301,7 +329,10 @@ while ans:
 			#Using Alexa as a white list (Potentially not the best method incase malware domains make it in the list) More filtering needs to be done.
 			#This is in beta and might want to be modified or removed.
 		else:
-			print '\nYou must run the training algoirthm first.'
+			print 67 * '#'
+			print 'You must run the training algoirthm first.'
+			print 67 * '#'
+			exit()
 	elif ans=="3":
 		if os.path.isfile('data/settings.conf') and os.path.isfile('data/database.json'):
 			testing()
