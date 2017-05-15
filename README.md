@@ -38,3 +38,12 @@ This project is still very much in development.
 NOTE: Whitelist features uses the Alexa Top 1m.
 
 Contact me via Twitter @philarkwright
+
+## Completed
+
+- [ ] Add Alexa Whitelisting
+- [ ] Add Pushbullet (Notify admin)
+- [ ] Fix Lag on capture traffic alerts
+
+## ToDo
+- [ ] Add arguments so capture live can be ran with nohup
