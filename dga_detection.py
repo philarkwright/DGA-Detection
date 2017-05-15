@@ -272,21 +272,24 @@ while ans:
 	if ans=="1": 
 		load_data()
 	elif ans=="2":
-		print 'Please wait whiles whitelist is read...'
-		with open('data/alexa_top_1m_domain.json', 'r') as f:
-			whitelist = json.load(f)
-		whitelist = dict((k) for k in whitelist)
-		###################################
-		baseline, total_bigrams_settings = load_settings()
-		try:
-			interface = raw_input("[*] Enter Desired Interface: ")
-		except KeyboardInterrupt:
-			print "[*] User Requested Shutdown..."
-			print "[*] Exiting..."
-			sys.exit(1)
-		sniff(iface = interface,filter = "port 53", prn = capture_traffic, store = 0)
-		#Using Alexa as a white list (Potentially not the best method incase malware domains make it in the list) More filtering needs to be done.
-		#This is in beta and might want to be modified or removed.
+		if os.path.isfile('data/settings.conf')
+			print 'Please wait whiles whitelist is read...'
+			with open('data/alexa_top_1m_domain.json', 'r') as f:
+				whitelist = json.load(f)
+			whitelist = dict((k) for k in whitelist)
+			###################################
+			baseline, total_bigrams_settings = load_settings()
+			try:
+				interface = raw_input("[*] Enter Desired Interface: ")
+			except KeyboardInterrupt:
+				print "[*] User Requested Shutdown..."
+				print "[*] Exiting..."
+				sys.exit(1)
+			sniff(iface = interface,filter = "port 53", prn = capture_traffic, store = 0)
+			#Using Alexa as a white list (Potentially not the best method incase malware domains make it in the list) More filtering needs to be done.
+			#This is in beta and might want to be modified or removed.
+		else:
+			print '\nYou must run the training algoirthm first.'
 	elif ans=="3":
 		if os.path.isfile('data/settings.conf') and os.path.isfile('data/database.json'):
 			testing()
