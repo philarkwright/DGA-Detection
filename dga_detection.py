@@ -13,6 +13,15 @@ import json
 import tldextract #Seperating subdomain from input_domain in capture 
 import alexa
 
+from pushbullet import PushBullet
+pushbullet_key = ''
+if pushbullet_key != '':
+	#Configure pushbulet 
+	p = PushBullet(pushbullet_key)
+
+	def send_note(note):
+		push = p.push_note('%s' % (note), '')
+
 def hasNumbers(inputString):
 	return any(char.isdigit() for char in inputString)
 
@@ -251,6 +260,9 @@ def capture_traffic(pkt):
 					print str(ip_src) +  "->",  str(ip_dst), "Warning! Potential DGA Detected ", "(", (pkt.getlayer(DNS).qd.qname), ")"
 					print 67 * "*"
 					print '\n'
+					if pushbullet_key != '':
+						alert_message = str((str(ip_src) +  "->",  str(ip_dst), "Warning! Potential DGA Detected ", "(", (pkt.getlayer(DNS).qd.qname), ")"))
+						send_note(alert_message)
 
 				#else:
 					#print "Safe input_domain", "(" + input_domain + ")"
@@ -272,7 +284,7 @@ while ans:
 	if ans=="1": 
 		load_data()
 	elif ans=="2":
-		if os.path.isfile('data/settings.conf')
+		if os.path.isfile('data/settings.conf'):
 			print 'Please wait whiles whitelist is read...'
 			with open('data/alexa_top_1m_domain.json', 'r') as f:
 				whitelist = json.load(f)
