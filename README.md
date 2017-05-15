@@ -44,6 +44,5 @@ Contact me via Twitter @philarkwright
 - [ ] Add Alexa Whitelisting
 - [ ] Add Pushbullet (Notify admin)
 - [ ] Fix Lag on capture traffic alerts
-
-## ToDo
 - [ ] Add arguments so capture live can be ran with nohup
+
