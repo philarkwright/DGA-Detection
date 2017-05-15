@@ -41,8 +41,6 @@ def load_settings():
 
 def load_data():
 
-
-
 	if os.path.isfile('data/database.json') and os.path.isfile('data/settings.conf'):
 
 		baseline, total_bigrams_settings = load_settings()
@@ -99,11 +97,14 @@ def load_data():
 
 def process_data(bigram_dict, total_bigrams):
 
-	data = open('data/alexa_training.txt').read().splitlines()
+	if os.path.isfile('data/alexa_top_1m_domain.json'):
+		with open('data/alexa_top_1m_domain.json', 'r') as f:
+			data = json.load(f)
+
 	percentage_list_alexa = [] #Define average_percentage
 
 	for input_domain in xrange(len(data)): #Run through each input_domain in the data
-		input_domain = tldextract.extract(data[input_domain])
+		input_domain = tldextract.extract(data[input_domain][1])
 		if len(input_domain.domain) > 5 and "-" not in input_domain.domain:
 			percentage = [] #Clear percentage list
 			for  bigram_position in xrange(len(input_domain.domain) - 1): #Run through each bigram in the data
