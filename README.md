@@ -41,6 +41,6 @@ Contact me via Twitter @philarkwright
 
 ## Completed
 
-- [ ] Add Whitelisting
+- [ ] Add Alexa Whitelisting
 - [ ] Add Pushbullet (Notify admin)
 - [ ] Fix Lag on capture traffic alerts
