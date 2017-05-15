@@ -31,4 +31,6 @@ sudo python dga_detection.py
 ## Potential Issues
 When running the install.sh file please note that the git:// protocol uses port 9418, so you should make sure your firewall allows outbound connections to this port.
 
+As this project is still very much in development, some features still haven't been added, e.g. a domain whitelist feature.
+
 Contact me via Twitter @philarkwright
