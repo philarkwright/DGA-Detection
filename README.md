@@ -40,6 +40,8 @@ When running the install.sh file please note that the git:// protocol uses port 
 
 This project is still very much in development.
 
+While running the script at network level on my home network I noticed that if I did certain google searches on google chrome, that I'd get a bunch of alert which appeared to be DGA domains. Even if you don't visit these sites which are normally chinese (Since they use giberish strings for their domains), google chrome will preloud and fetch them causing the alerts.
+
 NOTE: Whitelist features uses the Alexa Top 1m.
 
 Contact me via Twitter @philarkwright
