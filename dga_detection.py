@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 #Software License Agreement (BSD License)
 #Copyright (c) 2017 Phil Arkwright
 #All rights reserved.
