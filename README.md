@@ -1,4 +1,7 @@
 # DGA-Detection
+More and more malware is being created with advanced blocking circumvention techniques. One of the most prevalent techniques being used is the use of Domain Generation Algorithms which periodically generates a set of Domains to contact a C&C server. The majority of these DGA domains generate random alphanumeric strings which differ significantly in structure to a standard domain. By looking at the frequency that a set of bigrams in a domain occur within the Alexa top 1M, we were able to detect whether a domain was structured with a random string or if it was a legitimate human readable domain. If a domain is comprised nearly entirely of low frequency bigrams which occurred rarely within the Alexa top 1m then the domain would more likely be a random string. Bigrams of a vowel and constants occurred the most frequent whereas characters and integers occurred the least frequent. The script was ran against 100,000 GameoverZeus domains and had a detection rate of 100% and a false positive rate against the Alexa top 1m of 8% without any domain whitelisting being applied. 
+
+
 This System has been tested on Ubuntu and RaspberryPi.
 Currently I have my raspberrypi setup as a DNS server using Bind9.
 The DGA-Detection script is also run on the raspberrypi and reads the requests.
